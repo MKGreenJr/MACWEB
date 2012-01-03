@@ -1,0 +1,283 @@
+<?php
+
+/**
+ * @file
+ * Tests parsing of raw METAR data.
+ * 
+ * Copyright © 2006-2010 Tobias Quathamer <t.quathamer@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+class WeatherParserTestCase extends DrupalWebTestCase {
+  /**
+   * General information.
+   */
+  function getInfo() {
+    return array(
+      'name' => 'Parser',
+      'description' => 'Tests parsing of raw METAR data.',
+      'group' => 'Weather',
+    );
+  }
+
+  /**
+   * Set up testing environment.
+   */
+  function setUp() {
+    parent::setUp('weather');
+    module_load_include('inc', 'weather', 'weather_parser');
+  }
+
+  /**
+   * Test the parser with normal data.
+   */
+  function testNormalMETAR() {
+    $testdata = array(
+      "2008/12/07 12:50\nEDDH 071250Z 27005KT 9999 -SHRA BKN025 07/04 Q1021 NOSIG" =>
+      array(
+        'icao' => 'EDDH',
+        'reported_on' => '1228654200',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'broken',
+        'phenomena' => 'light rain showers',
+        'temperature' => 7,
+        'dewpoint' => 4,
+        'wind_direction' => '270',
+        'wind_speed' => 9.3,
+        'wind_gusts' => NULL,
+        'pressure' => 1021,
+        'visibility' => 9999,
+        'sunrise_on' => '1228634580',
+        'sunset_on' => '1228662060',
+        'image' => 'day-broken-light-rain',
+        'raw' => 'EDDH 071250Z 27005KT 9999 -SHRA BKN025 07/04 Q1021 NOSIG',
+      ),
+      "2008/11/29 11:20\nEDDH 291120Z 15004KT 1200 R23/1600N R15/1500N SN VV/// 01/M00 Q0995 NOSIG" =>
+      array(
+        'icao' => 'EDDH',
+        'reported_on' => '1227957600',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'overcast',
+        'phenomena' => 'snow',
+        'temperature' => 1,
+        'dewpoint' => 0,
+        'wind_direction' => '150',
+        'wind_speed' => 7.4,
+        'wind_gusts' => NULL,
+        'pressure' => 995,
+        'visibility' => 1200,
+        'sunrise_on' => '1227942720',
+        'sunset_on' => '1227971100',
+        'image' => 'day-overcast-moderate-snow',
+        'raw' => 'EDDH 291120Z 15004KT 1200 R23/1600N R15/1500N SN VV/// 01/M00 Q0995 NOSIG',
+      ),
+      "2008/12/04 02:55\nLICF 040255Z 02014G31KT 6000 RA BKN008 BKN080 OVC090 12/11 Q0994 RMK OVC QUK / QUL / VIS MAR 6 KM MON INVIS NC VIS MIN 6000" =>
+      array(
+        'icao' => 'LICF',
+        'reported_on' => '1228359300',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'overcast',
+        'phenomena' => 'rain',
+        'temperature' => 12,
+        'dewpoint' => 11,
+        'wind_direction' => '20',
+        'wind_speed' => 25.9,
+        'wind_gusts' => 57.4,
+        'pressure' => 994,
+        'visibility' => 6000,
+        'sunrise_on' => '1228370340',
+        'sunset_on' => '1228405080',
+        'image' => 'night-overcast-moderate-rain',
+        'raw' => 'LICF 040255Z 02014G31KT 6000 RA BKN008 BKN080 OVC090 12/11 Q0994 RMK OVC QUK / QUL / VIS MAR 6 KM MON INVIS NC VIS MIN 6000',
+      ),
+      "2008/12/07 14:00\nCYYZ 071400Z 31026G33KT 15SM FEW030 FEW120 FEW210 M09/M15 A2984 RMK CU2AC1CI1 CI TR SLP114" =>
+      array(
+        'icao' => 'CYYZ',
+        'reported_on' => '1228658400',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'few',
+        'phenomena' => NULL,
+        'temperature' => -9,
+        'dewpoint' => -15,
+        'wind_direction' => '310',
+        'wind_speed' => 48.2,
+        'wind_gusts' => 61.1,
+        'pressure' => 1010,
+        'visibility' => 24140,
+        'sunrise_on' => '1228653540',
+        'sunset_on' => '1228686120',
+        'image' => 'day-few',
+        'raw' => 'CYYZ 071400Z 31026G33KT 15SM FEW030 FEW120 FEW210 M09/M15 A2984 RMK CU2AC1CI1 CI TR SLP114',
+      ),
+      "2008/12/07 14:00\nFACT 071400Z 20016KT CAVOK 24/17 Q1013 NOSIG" =>
+      array(
+        'icao' => 'FACT',
+        'reported_on' => '1228658400',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'clear',
+        'phenomena' => NULL,
+        'temperature' => 24,
+        'dewpoint' => 17,
+        'wind_direction' => '200',
+        'wind_speed' => 29.6,
+        'wind_gusts' => NULL,
+        'pressure' => 1013,
+        'visibility' => 10000,
+        'sunrise_on' => '1228620420',
+        'sunset_on' => '1228672080',
+        'image' => 'day-clear',
+        'raw' => 'FACT 071400Z 20016KT CAVOK 24/17 Q1013 NOSIG',
+      ),
+      "2008/12/23 19:30\nULLI 231930Z 14006MPS 9999 OVC006 DZ M03/M04 Q0997 10520545 NOSIG RMK OBST OBSC" =>
+      array(
+        'icao' => 'ULLI',
+        'reported_on' => '1230060600',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'overcast',
+        'phenomena' => 'drizzle',
+        'temperature' => -3,
+        'dewpoint' => -4,
+        'wind_direction' => '140',
+        'wind_speed' => 21.6,
+        'wind_gusts' => NULL,
+        'pressure' => 997,
+        'visibility' => 9999,
+        'sunrise_on' => '1230015660',
+        'sunset_on' => '1230036900',
+        'image' => 'night-overcast-moderate-rain',
+        'raw' => 'ULLI 231930Z 14006MPS 9999 OVC006 DZ M03/M04 Q0997 10520545 NOSIG RMK OBST OBSC',
+      ),
+      "2008/12/22 20:20\nEGPL 222020Z AUTO 21012KT 7000NDV FEW006/// SCT010/// BKN014/// 09/08 Q1026" =>
+      array(
+        'icao' => 'EGPL',
+        'reported_on' => '1229977200',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'broken',
+        'phenomena' => NULL,
+        'temperature' => 9,
+        'dewpoint' => 8,
+        'wind_direction' => '210',
+        'wind_speed' => 22.2,
+        'wind_gusts' => NULL,
+        'pressure' => 1026,
+        'visibility' => 7000,
+        'sunrise_on' => '1229937000',
+        'sunset_on' => '1229960820',
+        'image' => 'night-broken',
+        'raw' => 'EGPL 222020Z AUTO 21012KT 7000NDV FEW006/// SCT010/// BKN014/// 09/08 Q1026',
+      ),
+      "2008/12/22 19:50\nEGUB 221950Z AUTO 18003KT 5000NDV BR OVC013/// 10/09 Q1035" =>
+      array(
+        'icao' => 'EGUB',
+        'reported_on' => '1229975400',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'overcast',
+        'phenomena' => 'mist',
+        'temperature' => 10,
+        'dewpoint' => 9,
+        'wind_direction' => '180',
+        'wind_speed' => 5.6,
+        'wind_gusts' => NULL,
+        'pressure' => 1035,
+        'visibility' => 5000,
+        'sunrise_on' => '1229933340',
+        'sunset_on' => '1229961480',
+        'image' => 'night-overcast-fog',
+        'raw' => 'EGUB 221950Z AUTO 18003KT 5000NDV BR OVC013/// 10/09 Q1035',
+      ),
+      "2010/01/30 16:50\nNZSP 301650Z 05007KT 9999 BKN010 BKN060 M31/ A2889 RMK CLN AIR 04007KT ALL WNDS GRID SDG/HDG=3D" =>
+      array(
+        'icao' => 'NZSP',
+        'reported_on' => '1264870200',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'broken',
+        'phenomena' => NULL,
+        'temperature' => -31,
+        'dewpoint' => NULL,
+        'wind_direction' => '050',
+        'wind_speed' => 13,
+        'wind_gusts' => NULL,
+        'pressure' => 978,
+        'visibility' => 9999,
+        'sunrise_on' => '1264870200',
+        'sunset_on' => NULL,
+        'image' => 'day-broken',
+        'raw' => 'NZSP 301650Z 05007KT 9999 BKN010 BKN060 M31/ A2889 RMK CLN AIR 04007KT ALL WNDS GRID SDG/HDG=3D',
+      ),
+      "2010/01/29 20:00\nCYLT 292000Z 29008KT 12SM SCT220 M36/M41 A3023 RMK CI2 IC LAST OBS/NEXT 011300 UTC SLP245" =>
+      array(
+        'icao' => 'CYLT',
+        'reported_on' => '1264795200',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'scattered',
+        'phenomena' => NULL,
+        'temperature' => -36,
+        'dewpoint' => -41,
+        'wind_direction' => '290',
+        'wind_speed' => 14.8,
+        'wind_gusts' => NULL,
+        'pressure' => 1024,
+        'visibility' => 19312,
+        'sunrise_on' => NULL,
+        'sunset_on' => '1264795200',
+        'image' => 'night-scattered',
+        'raw' => 'CYLT 292000Z 29008KT 12SM SCT220 M36/M41 A3023 RMK CI2 IC LAST OBS/NEXT 011300 UTC SLP245',
+      ),
+      "2010/01/30 20:30\nEPGD 302030Z 27013KT 9999 -SHSN BKN013 M02/M04 Q0984 R11/490236" =>
+      array(
+        'icao' => 'EPGD',
+        'reported_on' => '1264883400',
+        'next_update_on' => '1262300400',
+        'sky_condition' => 'broken',
+        'phenomena' => 'light snow showers',
+        'temperature' => -2,
+        'dewpoint' => -4,
+        'wind_direction' => '270',
+        'wind_speed' => 24.1,
+        'wind_gusts' => NULL,
+        'pressure' => 984,
+        'visibility' => 9999,
+        'sunrise_on' => '1264833420',
+        'sunset_on' => '1264864920',
+        'image' => 'night-broken-light-snow',
+        'raw' => 'EPGD 302030Z 27013KT 9999 -SHSN BKN013 M02/M04 Q0984 R11/490236',
+      ),
+    );
+    foreach ($testdata as $metar_raw => $expected) {
+      // First, parse the raw data into the METAR data object.
+      // Then store it in the database and retrieve it again.
+      $actual_metar = weather_parse_metar($metar_raw);
+      $actual_metar->next_update_on = '1262300400';
+      drupal_write_record('weather_metar', $actual_metar);
+      $actual_metar = db_query('SELECT * FROM {weather_metar} WHERE icao=:icao',
+        array(':icao' => $expected['icao']))->fetchObject();
+      $properties = array_keys(get_object_vars($actual_metar));
+      // Check that only expected properties exist in parsed data.
+      $this->assertEqual(sort($properties), sort(array_keys($expected)),
+        "Check that only expected properties exist in parsed data.");
+      // Check that all existing properties are expected and contain correct data.
+      foreach ($properties as $property) {
+        $this->assert(array_key_exists($property, $expected),
+          "Check that property '$property' exists in parsed data.");
+        $this->assertEqual($actual_metar->$property, $expected[$property]);
+      }
+      // Remove test data from database.
+      db_delete('weather_metar')
+        ->condition('icao', $expected['icao'])
+        ->execute();
+    }
+  }
+}
